@@ -48,31 +48,117 @@
 
 ---
 
-## 🏛️ Multi-Agent Team Architecture
+## 🏛️ System Architecture & Multi-Agent Design
 
-The system strictly adheres to the **Coordinator-Worker** design pattern. The Boss (`coordinator`) never attempts to synthesize code answers itself; it evaluates user intent and dispatches execution to exactly one specialized worker agent.
+The Multi-Agent Code Helper is engineered using a **tiered, service-oriented multi-agent architecture** managed by the **Google Agent Development Kit (ADK)**. 
+
+### Multi-Tier Architecture Diagram
 
 ```mermaid
 graph TD
-    User([👤 User Prompt]) --> Boss[👑 Coordinator Boss Agent<br/><i>Reads prompt, routes query, never answers directly</i>]
-    
-    Boss -->|Where is feature / logic?| W1[🔎 Code Searcher<br/><i>Semantic code retrieval</i>]
-    Boss -->|Explain whole file| W2[📖 Code Explainer<br/><i>Whole-file architecture & walkthrough</i>]
-    Boss -->|Imports / AST / Dependencies| W3[🗺️ Architecture Mapper<br/><i>Deterministic AST analysis</i>]
-    Boss -->|Where to start / Quickstart| W4[🧭 Onboarding Guide<br/><i>Reading order & project scope</i>]
-    
-    W1 --> T1[(🌲 Pinecone Serverless<br/>RAG Search 2048-dim)]
-    W2 --> T2[(📦 Filesystem MCP Server<br/>@modelcontextprotocol/server-filesystem)]
-    W3 --> T3[⚙️ Python AST Parser<br/>find_import_dependencies / get_file_outline]
-    W4 --> T4[📋 Project Orientation Tool<br/>get_project_quickstart_and_modules]
+    %% Tier 1: Client Interfaces
+    subgraph TIER_CLIENT ["🖥️ Tier 1: Presentation & Client Interfaces"]
+        CLI["ADK CLI Terminal<br/><code>adk run code_helper</code>"]
+        WEB["ADK Web Dashboard<br/><code>adk web</code>"]
+        OBS["Observatory Dashboard<br/><code>http://127.0.0.1:8080</code>"]
+    end
 
-    classDef boss fill:#1E293B,stroke:#38BDF8,stroke-width:2px,color:#FFFFFF;
-    classDef worker fill:#0F172A,stroke:#818CF8,stroke-width:1.5px,color:#E2E8F0;
-    classDef tool fill:#14532D,stroke:#4ADE80,stroke-width:1px,color:#F0FDF4;
-    class Boss boss;
-    class W1,W2,W3,W4 worker;
-    class T1,T2,T3,T4 tool;
+    %% Tier 2: Coordinator & Gateway
+    subgraph TIER_ROUTING ["👑 Tier 2: Orchestration & Intelligent Routing"]
+        BOSS["Coordinator Boss Agent<br/>(LlmAgent root_agent)"]
+        LITELLM["LiteLLM Universal Gateway<br/>(NVIDIA NIM Translation)"]
+        ROUTER["Intent Evaluator & Triage<br/>(transfer_to_agent)"]
+    end
+
+    %% Tier 3: Specialized Workers
+    subgraph TIER_WORKERS ["⚙️ Tier 3: Autonomous Specialist Workers"]
+        W_SEARCH["🔍 Code Searcher<br/>(Semantic Code Locator)"]
+        W_EXPLAIN["📖 Code Explainer<br/>(Whole-File Architecture)"]
+        W_MAPPER["📐 Architecture Mapper<br/>(AST Dependency Engine)"]
+        W_GUIDE["🧭 Onboarding Guide<br/>(Newcomer Orientation)"]
+    end
+
+    %% Tier 4: Tool Execution Engines
+    subgraph TIER_TOOLS ["🛠️ Tier 4: Execution & Tool Engines"]
+        T_RAG["rag_search()<br/>Query Embedding & Cosine KNN"]
+        T_MCP["McpToolset Client<br/>Stdio JSON-RPC Protocol"]
+        T_AST["Python AST Engine<br/>ast.parse & Node Visitor"]
+        T_GUIDE["Onboarding Spec Tool<br/>Module Roadmap & Run Guide"]
+    end
+
+    %% Tier 5: External Services & Storage
+    subgraph TIER_INFRA ["☁️ Tier 5: External Services & Storage"]
+        NVIDIA_LLM["NVIDIA NIM Chat API<br/>meta/llama-3.2-11b-vision-instruct"]
+        NVIDIA_EMBED["NVIDIA NIM Embeddings<br/>nvidia/nemotron-3-embed-1b (2048-dim)"]
+        PINECONE["Pinecone Serverless DB<br/>code-helper (AWS us-east-1, Cosine)"]
+        MCP_SERVER["Node.js MCP Filesystem Server<br/>@modelcontextprotocol/server-filesystem"]
+        TARGET_CODE["Target Codebase Disk<br/>Naive_RAG/*.py"]
+    end
+
+    %% Cross-Tier Connections
+    CLI --> BOSS
+    WEB --> BOSS
+    OBS --> BOSS
+
+    BOSS --> LITELLM
+    LITELLM --> NVIDIA_LLM
+    BOSS --> ROUTER
+
+    ROUTER -->|Where is code / logic?| W_SEARCH
+    ROUTER -->|Explain whole file?| W_EXPLAIN
+    ROUTER -->|Imports / dependencies?| W_MAPPER
+    ROUTER -->|Where to start / overview?| W_GUIDE
+
+    W_SEARCH --> T_RAG
+    W_EXPLAIN --> T_MCP
+    W_MAPPER --> T_AST
+    W_GUIDE --> T_GUIDE
+
+    T_RAG --> NVIDIA_EMBED
+    T_RAG --> PINECONE
+    T_MCP --> MCP_SERVER
+    MCP_SERVER --> TARGET_CODE
+    T_AST --> TARGET_CODE
+    T_GUIDE --> TARGET_CODE
+
+    classDef client fill:#1E293B,stroke:#38BDF8,stroke-width:1.5px,color:#FFFFFF;
+    classDef boss fill:#312E81,stroke:#818CF8,stroke-width:2px,color:#FFFFFF;
+    classDef worker fill:#0F172A,stroke:#A855F7,stroke-width:1.5px,color:#E2E8F0;
+    classDef tool fill:#14532D,stroke:#4ADE80,stroke-width:1.5px,color:#F0FDF4;
+    classDef infra fill:#1C1917,stroke:#F59E0B,stroke-width:1.5px,color:#FEF3C7;
+
+    class CLI,WEB,OBS client;
+    class BOSS,LITELLM,ROUTER boss;
+    class W_SEARCH,W_EXPLAIN,W_MAPPER,W_GUIDE worker;
+    class T_RAG,T_MCP,T_AST,T_GUIDE tool;
+    class NVIDIA_LLM,NVIDIA_EMBED,PINECONE,MCP_SERVER,TARGET_CODE infra;
 ```
+
+### Architectural Principles & Layer Breakdown
+
+1. **Presentation Tier (Multi-Channel Interface)**:
+   - **ADK Terminal Runner (`adk run code_helper`)**: Direct stdin/stdout CLI REPL for developers.
+   - **ADK Web UI (`adk web`)**: Official Google session-graph visualizer on port 8000.
+   - **Observatory Dashboard (`frontend/server.py`)**: Custom real-time visual flight simulator and chat interface on port 8080.
+
+2. **Orchestration Tier (The Coordinator Boss)**:
+   - **Invariant**: The Boss **never** answers technical questions directly.
+   - **Triage Protocol**: Parses query semantics and invokes Google ADK's built-in `transfer_to_agent` mechanism to delegate control to exactly one worker.
+   - **Shared Model Connection**: Uses a unified `LiteLlm` client pointing to NVIDIA NIM (`meta/llama-3.2-11b-vision-instruct`).
+
+3. **Specialized Worker Tier**:
+   - Each worker operates as a bounded agent with a dedicated instruction set.
+   - **Agent Isolation**: Configured with `disallow_transfer_to_parent=True` and `disallow_transfer_to_peers=True` to prevent infinite delegation loops and ensure deterministic completion.
+
+4. **Tool & Engine Tier**:
+   - **Custom RAG Engine (`rag_search`)**: 5-step manual retrieval pipeline with a 0.72 similarity threshold and keyword validation guard.
+   - **Deterministic AST Parser (`find_import_dependencies`, `get_file_outline`)**: Uses Python's native `ast` module to read language grammar with 100% mathematical accuracy. Zero LLM guessing.
+   - **Model Context Protocol Client (`file_tools`)**: Bridges the agent to the official `@modelcontextprotocol/server-filesystem` JSON-RPC stdio daemon.
+
+5. **Persistence & Inference Tier**:
+   - **Inference**: High-throughput inference via NVIDIA NIM REST endpoints.
+   - **Vector Database**: Pinecone Serverless running on AWS `us-east-1` with 2048-dimensional vectors using the cosine similarity metric.
+   - **Sandboxed Filesystem**: Read-only directory scoping strictly limited to the `Naive_RAG/` target codebase folder.
 
 ### Table of Agents
 
@@ -85,6 +171,7 @@ graph TD
 | **`onboarding_guide`** | **Specialized Worker** | `get_project_quickstart_and_modules` | *"I am new to this project. Where do I start?"*<br/>*"How do I run this repo?"* | Targeted when user asks for getting-started orientation, reading orders, or overview commands. |
 
 ---
+
 
 ## 🛠️ Comprehensive Tools Catalog
 
