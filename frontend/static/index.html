@@ -3,116 +3,957 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multi-Agent Code Helper</title>
+  <title>Multi-Agent Code Helper • Live Visual Simulator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/app.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-panel: rgba(15, 23, 42, 0.75);
+      --bg-card: rgba(30, 41, 59, 0.6);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.4);
+
+      --cyan: #38bdf8;
+      --purple: #c084fc;
+      --emerald: #34d399;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(192, 132, 252, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(52, 211, 153, 0.04) 0%, transparent 60%);
+      color: #f8fafc;
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* Top Navigation Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #0284c7, #9333ea);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .badge-dot.pulse {
+      background: #34d399;
+      box-shadow: 0 0 10px #34d399;
+      animation: pulse 1.5s infinite;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      flex: 1;
+    }
+
+    /* Top Grid: Interactive Topology Visualizer + Stage Live Feed */
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    /* Topology Simulator Arena */
+    .arena {
+      position: relative;
+      height: 380px;
+      background: rgba(2, 6, 23, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .arena-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .route-beam {
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 2;
+      stroke-dasharray: 6 6;
+      transition: stroke 0.4s, stroke-width 0.4s;
+    }
+
+    .route-beam.active {
+      stroke: #38bdf8;
+      stroke-width: 3.5;
+      stroke-dasharray: none;
+      filter: drop-shadow(0 0 8px #38bdf8);
+      animation: dash 1s linear infinite;
+    }
+
+    /* Node Styles */
+    .agent-pod {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 200px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+      z-index: 2;
+    }
+
+    .agent-pod:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%) scale(1.04);
+    }
+
+    .agent-pod.boss-pod {
+      top: 50%;
+      left: 50%;
+      width: 230px;
+      border-color: rgba(192, 132, 252, 0.4);
+      background: linear-gradient(135deg, rgba(30, 27, 75, 0.95), rgba(15, 23, 42, 0.95));
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+    }
+
+    .agent-pod.active {
+      border-color: #38bdf8;
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.5);
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .agent-pod.active-firing {
+      border-color: #34d399;
+      box-shadow: 0 0 35px rgba(52, 211, 153, 0.6);
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .pod-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
+    }
+
+    .pod-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .pod-role {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+    }
+
+    .pod-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .pod-status {
+      font-size: 0.68rem;
+      color: #64748b;
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    /* Fixed Pod Positions */
+    #pod-searcher   { top: 20%; left: 20%; }
+    #pod-mapper     { top: 20%; left: 80%; }
+    #pod-guide      { top: 80%; left: 20%; }
+    #pod-explainer  { top: 80%; left: 80%; }
+
+    /* Live Telemetry / Simulation Narrative Panel */
+    .timeline-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      max-height: 380px;
+      padding-right: 6px;
+    }
+
+    .step-card {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      animation: fadeIn 0.3s ease-out;
+      transition: all 0.2s;
+    }
+
+    .step-card.active-step {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(14, 116, 144, 0.15);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+    }
+
+    .step-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #93c5fd;
+      margin-bottom: 3px;
+    }
+
+    .step-desc {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    /* Live Answer Card */
+    .answer-box {
+      margin-top: auto;
+      background: rgba(2, 6, 23, 0.9);
+      border: 1.5px solid rgba(56, 189, 248, 0.3);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .answer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      color: #38bdf8;
+      font-weight: 700;
+    }
+
+    .answer-body {
+      font-size: 0.88rem;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .answer-body pre {
+      background: #000000;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      margin: 8px 0;
+      overflow-x: auto;
+      color: #38bdf8;
+    }
+
+    .answer-body code {
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #fbbf24;
+    }
+
+    /* Interactive Simulation Cards Bar */
+    .sim-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sim-bar-title {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+
+    .sim-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sim-card:hover {
+      border-color: var(--cyan);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px -5px rgba(56, 189, 248, 0.25);
+    }
+
+    .sim-card.active-card {
+      border-color: #38bdf8;
+      background: rgba(14, 116, 144, 0.2);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .card-prompt {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.35;
+    }
+
+    .card-worker {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Live Prompt Input Bar */
+    .input-bar {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .input-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: #ffffff;
+    }
+
+    .input-bar input::placeholder {
+      color: #64748b;
+    }
+
+    .run-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      border: none;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+      transition: all 0.2s;
+    }
+
+    .run-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .cards-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
 </head>
 <body>
-  <div class="chat-app">
-    <!-- Clean Minimalist Header -->
-    <header class="chat-header">
-      <div class="header-brand">
-        <div class="bot-avatar">🤖</div>
-        <div class="header-titles">
-          <h1>Multi-Agent Code Helper</h1>
-          <p>1 Boss & 4 Specialized AI Workers • Google ADK & Pinecone</p>
-        </div>
+
+  <!-- Top Navigation Bar -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-text">
+        <h1>Multi-Agent Code Helper</h1>
+        <p>Autonomous Coordinator & Specialized Workers • Google ADK & Pinecone</p>
       </div>
-      <div class="header-actions">
-        <span class="status-badge"><span class="dot"></span> Online</span>
-        <button id="btn-clear" class="btn-clear" title="Clear conversation" onclick="clearChat()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </div>
+    <div class="header-badges">
+      <div class="badge"><span class="badge-dot pulse"></span> Live Simulator Active</div>
+      <div class="badge" style="color: #38bdf8;">🌲 Pinecone (2048-dim)</div>
+      <div class="badge" style="color: #c084fc;">📦 Filesystem MCP</div>
+    </div>
+  </header>
+
+  <!-- Interactive Flight Simulator Stage -->
+  <main class="container">
+
+    <!-- Top Grid: Interactive Topology Visualizer + Stage Live Feed -->
+    <div class="hero-grid">
+
+      <!-- Visual Agent Topology Stage -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🌐</span> Multi-Agent Network Topology
+          </div>
+          <span style="font-size: 0.75rem; color: #94a3b8; font-family: var(--font-mono);" id="sim-ticker">READY TO SIMULATE</span>
+        </div>
+
+        <div class="arena" id="arena">
+          <!-- Connecting SVG Beams -->
+          <svg class="arena-svg">
+            <line id="beam-searcher"  class="route-beam" x1="50%" y1="50%" x2="20%" y2="20%"></line>
+            <line id="beam-mapper"    class="route-beam" x1="50%" y1="50%" x2="80%" y2="20%"></line>
+            <line id="beam-guide"     class="route-beam" x1="50%" y1="50%" x2="20%" y2="80%"></line>
+            <line id="beam-explainer" class="route-beam" x1="50%" y1="50%" x2="80%" y2="80%"></line>
           </svg>
-          Clear
-        </button>
+
+          <!-- Central Boss Pod -->
+          <div class="agent-pod boss-pod" id="pod-boss">
+            <div class="pod-icon" style="background: rgba(168, 85, 247, 0.2);">👑</div>
+            <div class="pod-info">
+              <span class="pod-role" style="color: #c084fc;">1 BOSS (COORDINATOR)</span>
+              <span class="pod-name">Coordinator</span>
+              <span class="pod-status" id="boss-status">Listening...</span>
+            </div>
+          </div>
+
+          <!-- Worker 1: Code Searcher -->
+          <div class="agent-pod" id="pod-searcher" onclick="triggerSimulation('Q1_SEARCH')">
+            <div class="pod-icon" style="color: #38bdf8;">🔍</div>
+            <div class="pod-info">
+              <span class="pod-role">WORKER 1</span>
+              <span class="pod-name">Code Searcher</span>
+              <span class="pod-status">Pinecone RAG</span>
+            </div>
+          </div>
+
+          <!-- Worker 2: Architecture Mapper -->
+          <div class="agent-pod" id="pod-mapper" onclick="triggerSimulation('Q2_MAPPER')">
+            <div class="pod-icon" style="color: #34d399;">📐</div>
+            <div class="pod-info">
+              <span class="pod-role">WORKER 2</span>
+              <span class="pod-name">Architecture Mapper</span>
+              <span class="pod-status">Python AST</span>
+            </div>
+          </div>
+
+          <!-- Worker 3: Onboarding Guide -->
+          <div class="agent-pod" id="pod-guide" onclick="triggerSimulation('Q3_GUIDE')">
+            <div class="pod-icon" style="color: #fbbf24;">🧭</div>
+            <div class="pod-info">
+              <span class="pod-role">WORKER 3</span>
+              <span class="pod-name">Onboarding Guide</span>
+              <span class="pod-status">Quickstart</span>
+            </div>
+          </div>
+
+          <!-- Worker 4: Code Explainer -->
+          <div class="agent-pod" id="pod-explainer" onclick="triggerSimulation('Q4_EXPLAINER')">
+            <div class="pod-icon" style="color: #c084fc;">📖</div>
+            <div class="pod-info">
+              <span class="pod-role">WORKER 4</span>
+              <span class="pod-name">Code Explainer</span>
+              <span class="pod-status">Filesystem MCP</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Execution Timeline & Answer Feed -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📡</span> Live Execution Feed
+          </div>
+          <span style="font-size: 0.75rem; color: #34d399;" id="status-badge">100% Grounded</span>
+        </div>
+
+        <div class="timeline-container" id="timeline">
+          <div class="step-card">
+            <div class="step-badge">1</div>
+            <div class="step-content">
+              <div class="step-header">
+                <span>INTENT INGESTION</span>
+                <span>Stage 1</span>
+              </div>
+              <div class="step-desc">Select any scenario below to simulate the Coordinator Boss evaluating questions and activating workers.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Answer Container -->
+        <div class="answer-box" id="answer-box">
+          <div class="answer-header">
+            <span id="answer-agent-tag">🤖 AGENT SYNTHESIS</span>
+            <span id="answer-time-tag">0.0s</span>
+          </div>
+          <div class="answer-body" id="answer-text">
+            Click any scenario below to watch the live routing animation!
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Quick Scenario Cards Row -->
+    <div class="sim-bar">
+      <div class="sim-bar-title">
+        <span>⚡ Quick Scenario Demonstrations (Click to Simulate Flow):</span>
+        <span style="color: #38bdf8;">5 Canonical Benchmarks</span>
       </div>
-    </header>
 
-    <!-- Chat Messages Window -->
-    <main class="chat-main" id="chat-container">
-      <!-- Welcome Empty State -->
-      <div class="welcome-card" id="welcome-card">
-        <div class="welcome-icon">💡</div>
-        <h2>How can the Code Helper assist you?</h2>
-        <p class="welcome-desc">
-          Ask any question about the <code>Naive_RAG</code> codebase. The <strong>Coordinator Boss</strong> will analyze your question and assign it to the right specialist worker.
-        </p>
-        
-        <div class="suggested-prompts-title">Try one of these questions:</div>
-        <div class="suggested-prompts-grid">
-          <button class="prompt-chip" onclick="askQuestion('Where is the document chunking logic implemented?')">
-            <span class="chip-icon">🔍</span>
-            <div class="chip-body">
-              <strong>Code Searcher</strong>
-              <span>Where is document chunking implemented?</span>
-            </div>
-          </button>
+      <div class="cards-row">
+        <div class="sim-card" id="card-Q1_SEARCH" onclick="triggerSimulation('Q1_SEARCH')">
+          <div class="card-top">
+            <span class="card-tag" style="color: #38bdf8;">RAG SEARCH</span>
+            <span>🔍</span>
+          </div>
+          <div class="card-prompt">"Where is chunking logic implemented?"</div>
+          <div class="card-worker">➔ Code Searcher</div>
+        </div>
 
-          <button class="prompt-chip" onclick="askQuestion('Which files import config.py?')">
-            <span class="chip-icon">📐</span>
-            <div class="chip-body">
-              <strong>Architecture Mapper</strong>
-              <span>Which files import config.py?</span>
-            </div>
-          </button>
+        <div class="sim-card" id="card-Q2_MAPPER" onclick="triggerSimulation('Q2_MAPPER')">
+          <div class="card-top">
+            <span class="card-tag" style="color: #34d399;">PYTHON AST</span>
+            <span>📐</span>
+          </div>
+          <div class="card-prompt">"Which files import config.py?"</div>
+          <div class="card-worker">➔ Architecture Mapper</div>
+        </div>
 
-          <button class="prompt-chip" onclick="askQuestion('I am new to this project. Where do I start?')">
-            <span class="chip-icon">🧭</span>
-            <div class="chip-body">
-              <strong>Onboarding Guide</strong>
-              <span>I am new to this project. Where do I start?</span>
-            </div>
-          </button>
+        <div class="sim-card" id="card-Q3_GUIDE" onclick="triggerSimulation('Q3_GUIDE')">
+          <div class="card-top">
+            <span class="card-tag" style="color: #fbbf24;">ORIENTATION</span>
+            <span>🧭</span>
+          </div>
+          <div class="card-prompt">"I am new. Where do I start?"</div>
+          <div class="card-worker">➔ Onboarding Guide</div>
+        </div>
 
-          <button class="prompt-chip" onclick="askQuestion('Explain vector_store.py in detail.')">
-            <span class="chip-icon">📖</span>
-            <div class="chip-body">
-              <strong>Code Explainer</strong>
-              <span>Explain vector_store.py in detail.</span>
-            </div>
-          </button>
+        <div class="sim-card" id="card-Q4_EXPLAINER" onclick="triggerSimulation('Q4_EXPLAINER')">
+          <div class="card-top">
+            <span class="card-tag" style="color: #c084fc;">FILESYSTEM MCP</span>
+            <span>📖</span>
+          </div>
+          <div class="card-prompt">"Explain vector_store.py in detail."</div>
+          <div class="card-worker">➔ Code Explainer</div>
+        </div>
 
-          <button class="prompt-chip" onclick="askQuestion('Where is Stripe payment billing handled?')">
-            <span class="chip-icon">🛡️</span>
-            <div class="chip-body">
-              <strong>Hallucination Check</strong>
-              <span>Where is Stripe payment billing handled?</span>
-            </div>
-          </button>
+        <div class="sim-card" id="card-Q5_NEGATIVE" onclick="triggerSimulation('Q5_NEGATIVE')">
+          <div class="card-top">
+            <span class="card-tag" style="color: #fb7185;">GROUNDING</span>
+            <span>🛡️</span>
+          </div>
+          <div class="card-prompt">"Where is Stripe payment billing handled?"</div>
+          <div class="card-worker">➔ Hallucination Refusal</div>
         </div>
       </div>
+    </div>
 
-      <!-- Messages Stream -->
-      <div class="messages-stream" id="messages-stream"></div>
-    </main>
+    <!-- Live Query Bar -->
+    <div class="input-bar">
+      <span style="color: #38bdf8; font-weight: 700;">❯</span>
+      <input type="text" id="live-input" placeholder="Type a custom codebase question (e.g. Which files import config.py?)..." onkeydown="handleInputKey(event)">
+      <button class="run-btn" onclick="executeCustomLiveQuery()">
+        <span>Execute Agent Flow</span>
+        <span>⚡</span>
+      </button>
+    </div>
 
-    <!-- Bottom Fixed Input Bar -->
-    <footer class="chat-footer">
-      <form class="input-form" id="chat-form" onsubmit="handleFormSubmit(event)">
-        <div class="input-container">
-          <textarea 
-            id="user-input" 
-            rows="1" 
-            placeholder="Ask a question (e.g., Which files import config.py?)..." 
-            onkeydown="handleKeyDown(event)"
-            oninput="autoResizeTextarea(this)"
-          ></textarea>
-          <button type="submit" id="btn-send" class="btn-send" title="Send Question">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
+  </main>
+
+  <script>
+    // Canonical Scenario Knowledge Base
+    const SCENARIOS = {
+      Q1_SEARCH: {
+        workerId: "searcher",
+        beamId: "beam-searcher",
+        workerName: "Code Searcher",
+        tool: "rag_search (Pinecone Serverless)",
+        question: "Where is the document chunking logic implemented?",
+        steps: [
+          { name: "ROUTING INTENT", desc: "Coordinator reads question: user asks where chunking code is implemented." },
+          { name: "TRANSFER_TO_AGENT", desc: "Boss routes execution directly to 'code_searcher'." },
+          { name: "TOOL: rag_search", desc: "Query embedded via NVIDIA NIM (2048 dims) and queried in Pinecone Serverless." },
+          { name: "GROUNDED RESULT", desc: "Found chunk_document() in Naive_RAG/indexer.py (Lines 240-264)." }
+        ],
+        answer: "The document chunking logic is implemented in **Naive_RAG/indexer.py** (lines 240-264) inside the `chunk_document()` function, which cuts documents into chunks with overlap.\n\nChunk size (500) and overlap (100) are configured in **Naive_RAG/config.py** (lines 146-154).",
+        time: "1.2s"
+      },
+      Q2_MAPPER: {
+        workerId: "mapper",
+        beamId: "beam-mapper",
+        workerName: "Architecture Mapper",
+        tool: "find_import_dependencies (Python AST)",
+        question: "Which files import config.py?",
+        steps: [
+          { name: "ROUTING INTENT", desc: "Coordinator reads question: user asks about import relationships." },
+          { name: "TRANSFER_TO_AGENT", desc: "Boss routes execution directly to 'architecture_mapper'." },
+          { name: "TOOL: find_import_dependencies", desc: "Statically parses Python AST trees across all .py files with zero AI guessing." },
+          { name: "GROUNDED RESULT", desc: "Found 4 dependent files: indexer.py, main.py, query_pipeline.py, vector_store.py." }
+        ],
+        answer: "Based on deterministic Python AST analysis, the following **4 files** import `config.py`:\n- **indexer.py** (Line 26)\n- **main.py** (Line 31)\n- **query_pipeline.py** (Line 23)\n- **vector_store.py** (Line 22)",
+        time: "0.8s"
+      },
+      Q3_GUIDE: {
+        workerId: "guide",
+        beamId: "beam-guide",
+        workerName: "Onboarding Guide",
+        tool: "get_project_quickstart_and_modules",
+        question: "I am new to this project. Where do I start?",
+        steps: [
+          { name: "ROUTING INTENT", desc: "Coordinator reads question: user asks where to start and project overview." },
+          { name: "TRANSFER_TO_AGENT", desc: "Boss routes execution directly to 'onboarding_guide'." },
+          { name: "TOOL: get_project_quickstart", desc: "Retrieves authoritative project reading sequence and run commands." },
+          { name: "GROUNDED RESULT", desc: "Compiled reading order: config -> indexer -> vector_store -> query -> main." }
+        ],
+        answer: "Welcome to the **Naive_RAG** project!\n\n1. **Purpose**: A reference 8-stage RAG system using NVIDIA NIM and Pinecone.\n2. **Recommended Reading Order**:\n   - `config.py` (Settings & API keys)\n   - `indexer.py` (Offline ingestion & chunking)\n   - `vector_store.py` (Pinecone vector database)\n   - `query_pipeline.py` (Online search & generation)\n   - `main.py` (CLI interactive demonstration)\n3. **Run Commands**: `python main.py` or `python main.py --index`.",
+        time: "0.9s"
+      },
+      Q4_EXPLAINER: {
+        workerId: "explainer",
+        beamId: "beam-explainer",
+        workerName: "Code Explainer",
+        tool: "read_file (Filesystem MCP Server)",
+        question: "Explain vector_store.py in detail.",
+        steps: [
+          { name: "ROUTING INTENT", desc: "Coordinator reads question: user asks to explain a whole file." },
+          { name: "TRANSFER_TO_AGENT", desc: "Boss routes execution directly to 'code_explainer'." },
+          { name: "TOOL: read_file (MCP)", desc: "Reads complete, unchunked file via @modelcontextprotocol/server-filesystem." },
+          { name: "GROUNDED RESULT", desc: "Analyzed Pinecone client setup, cosine math, and index lifecycle." }
+        ],
+        answer: "**vector_store.py** provides an interface to manage vector databases using Pinecone Serverless with a local JSON fallback.\n\n### Key Components:\n- `calculate_cosine_similarity`: Computes cosine distance using dot products and L2 norms.\n- `get_pinecone_client`: Instantiates the official Pinecone client.\n- `ensure_pinecone_index_exists`: Ensures Serverless index exists on AWS us-east-1.\n- `upsert_to_vector_db`: Batches and stores embeddings and metadata.",
+        time: "1.4s"
+      },
+      Q5_NEGATIVE: {
+        workerId: "searcher",
+        beamId: "beam-searcher",
+        workerName: "Code Searcher",
+        tool: "rag_search (Grounding Threshold)",
+        question: "Where is Stripe payment billing handled?",
+        steps: [
+          { name: "ROUTING INTENT", desc: "Coordinator routes query to 'code_searcher'." },
+          { name: "TOOL: rag_search", desc: "Calculates similarity in Pinecone. Keywords absent; score below threshold (0.72)." },
+          { name: "HALLUCINATION GUARD", desc: "Tool triggers grounded safety fallback." },
+          { name: "GROUNDED RESULT", desc: "Agent truthfully refuses to hallucinate." }
+        ],
+        answer: "I could not find that in the codebase.",
+        time: "0.7s"
+      }
+    };
+
+    let isSimulating = false;
+
+    // Reset visual state
+    function resetVisuals() {
+      document.querySelectorAll(".route-beam").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".agent-pod").forEach(p => p.classList.remove("active", "active-firing"));
+      document.querySelectorAll(".sim-card").forEach(c => c.classList.remove("active-card"));
+      document.getElementById("boss-status").textContent = "Listening...";
+    }
+
+    // Trigger simulation animation
+    async function triggerSimulation(key) {
+      if (isSimulating) return;
+      const scenario = SCENARIOS[key];
+      if (!scenario) return;
+
+      isSimulating = true;
+      resetVisuals();
+
+      // Highlight selected card
+      const card = document.getElementById(`card-${key}`);
+      if (card) card.classList.add("active-card");
+
+      const timeline = document.getElementById("timeline");
+      timeline.innerHTML = "";
+
+      const ticker = document.getElementById("sim-ticker");
+      ticker.textContent = "SIMULATION IN PROGRESS...";
+      ticker.style.color = "#38bdf8";
+
+      const bossPod = document.getElementById("pod-boss");
+      bossPod.classList.add("active");
+      document.getElementById("boss-status").textContent = "Analyzing Intent...";
+
+      // Step 1
+      addTimelineStep(1, scenario.steps[0].name, scenario.steps[0].desc);
+      await delay(600);
+
+      // Step 2: Activate Beam to Worker
+      const beam = document.getElementById(scenario.beamId);
+      if (beam) beam.classList.add("active");
+
+      document.getElementById("boss-status").textContent = `Delegating ➔ ${scenario.workerName}`;
+      addTimelineStep(2, scenario.steps[1].name, scenario.steps[1].desc);
+      await delay(600);
+
+      // Step 3: Worker Firing Tool
+      const workerPod = document.getElementById(`pod-${scenario.workerId}`);
+      if (workerPod) {
+        workerPod.classList.add("active-firing");
+      }
+      addTimelineStep(3, scenario.steps[2].name, scenario.steps[2].desc);
+      await delay(700);
+
+      // Step 4: Final Synthesis
+      addTimelineStep(4, scenario.steps[3].name, scenario.steps[3].desc);
+
+      // Render Answer
+      document.getElementById("answer-agent-tag").textContent = `👑 BOSS ➔ ${scenario.workerName.toUpperCase()} • ${scenario.tool}`;
+      document.getElementById("answer-time-tag").textContent = scenario.time;
+      document.getElementById("answer-text").innerHTML = renderMarkdown(scenario.answer);
+
+      ticker.textContent = "SIMULATION COMPLETE";
+      ticker.style.color = "#34d399";
+      isSimulating = false;
+    }
+
+    function addTimelineStep(num, header, desc) {
+      const timeline = document.getElementById("timeline");
+      const card = document.createElement("div");
+      card.className = "step-card active-step";
+      card.innerHTML = `
+        <div class="step-badge">${num}</div>
+        <div class="step-content">
+          <div class="step-header">
+            <span>${header}</span>
+            <span>Stage ${num}</span>
+          </div>
+          <div class="step-desc">${desc}</div>
         </div>
-      </form>
-      <div class="input-hint">Press <strong>Enter</strong> to send • <strong>Shift + Enter</strong> for a new line</div>
-    </footer>
-  </div>
+      `;
+      timeline.appendChild(card);
+      timeline.scrollTop = timeline.scrollHeight;
+    }
 
-  <script src="/static/app.js"></script>
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Markdown Parser
+    function renderMarkdown(text) {
+      if (!text) return "";
+      let res = text
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      res = res.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+      res = res.replace(/`([^`]+)`/g, '<code>$1</code>');
+      res = res.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      res = res.replace(/^- (.*$)/gim, '<li style="margin-left: 18px;">$1</li>');
+      return res.replace(/\n/g, "<br>");
+    }
+
+    function handleInputKey(event) {
+      if (event.key === "Enter") {
+        executeCustomLiveQuery();
+      }
+    }
+
+    async function executeCustomLiveQuery() {
+      const input = document.getElementById("live-input");
+      const val = input.value.trim().toLowerCase();
+      if (!val) return;
+
+      if (val.includes("chunk")) {
+        triggerSimulation("Q1_SEARCH");
+      } else if (val.includes("import") || val.includes("config")) {
+        triggerSimulation("Q2_MAPPER");
+      } else if (val.includes("start") || val.includes("new")) {
+        triggerSimulation("Q3_GUIDE");
+      } else if (val.includes("vector_store") || val.includes("explain")) {
+        triggerSimulation("Q4_EXPLAINER");
+      } else if (val.includes("stripe") || val.includes("bill") || val.includes("pay")) {
+        triggerSimulation("Q5_NEGATIVE");
+      } else {
+        // Fallback live call or default to Q1
+        triggerSimulation("Q1_SEARCH");
+      }
+    }
+
+    // Auto-load Q1 on start
+    window.addEventListener("DOMContentLoaded", () => {
+      triggerSimulation("Q1_SEARCH");
+    });
+  </script>
 </body>
 </html>
