@@ -302,7 +302,9 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 def run():
     import uvicorn
-    uvicorn.run("frontend.server:app", host="127.0.0.1", port=8000, reload=False)
+    port = int(os.getenv("PORT", "8080"))
+    print(f"\n[OBSERVATORY LAUNCH] Starting Multi-Agent Frontend at: http://127.0.0.1:{port}\n")
+    uvicorn.run("frontend.server:app", host="127.0.0.1", port=port, reload=False)
 
 
 if __name__ == "__main__":
