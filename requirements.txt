@@ -1,0 +1,17 @@
+# Google Agent Development Kit
+google-adk
+
+# Universal LLM Gateway (required by Student Guide for NVIDIA NIM)
+litellm>=1.84
+
+# OpenAI Client (OpenAI-compatible interface for NVIDIA NIM)
+openai
+
+# Pinecone Vector Database Client
+pinecone
+
+# Model Context Protocol Python SDK (for MCP Toolset)
+mcp
+
+# Environment & Secret Management
+python-dotenv

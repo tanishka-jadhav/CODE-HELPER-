@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Agent Code Helper & RAG Observability Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>MULTI-AGENT CODE HELPER <span>v2.0</span></h1>
+          <p class="subtitle">Google ADK • NVIDIA NIM • Pinecone Serverless • Filesystem MCP</p>
+        </div>
+      </div>
+
+      <div class="system-badges">
+        <div class="badge-item pulse-green" id="badge-nim">
+          <span class="dot"></span> NVIDIA NIM (Nemotron + Llama 3.2)
+        </div>
+        <div class="badge-item pulse-blue" id="badge-pinecone">
+          <span class="dot"></span> Pinecone (2048-dim)
+        </div>
+        <div class="badge-item pulse-purple" id="badge-mcp">
+          <span class="dot"></span> MCP Filesystem (Node stdio)
+        </div>
+        <div class="badge-item pulse-amber" id="badge-loopguard">
+          <span class="dot"></span> Loop-Guard Active
+        </div>
+      </div>
+    </header>
+
+    <!-- 3-Step "How It Works" Visual Orientation Bar -->
+    <section class="how-it-works-strip">
+      <div class="how-card">
+        <div class="how-badge">STEP 1</div>
+        <div class="how-icon">👑</div>
+        <div class="how-text">
+          <strong>1. Coordinator Boss Routes</strong>
+          <p>Analyzes user intent and delegates to the single right specialist.</p>
+        </div>
+      </div>
+      <div class="how-divider">➔</div>
+      <div class="how-card">
+        <div class="how-badge">STEP 2</div>
+        <div class="how-icon">🛠️</div>
+        <div class="how-text">
+          <strong>2. Specialist Executes</strong>
+          <p>Runs exact tool: Pinecone RAG, Python AST, or MCP filesystem.</p>
+        </div>
+      </div>
+      <div class="how-divider">➔</div>
+      <div class="how-card">
+        <div class="how-badge">STEP 3</div>
+        <div class="how-icon">🎯</div>
+        <div class="how-text">
+          <strong>3. Grounded Answer</strong>
+          <p>Produces line-cited facts with provenance. Zero hallucination.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Query Bar & Golden Questions -->
+    <section class="console-hero">
+      <div class="query-card">
+        <div class="query-header">
+          <div class="query-mode-toggle">
+            <button class="mode-btn active" id="btn-mode-live" onclick="setMode('live')">
+              <span class="mode-icon">⚡</span> Live Agent Run
+            </button>
+            <button class="mode-btn" id="btn-mode-simulate" onclick="setMode('simulate')">
+              <span class="mode-icon">🎬</span> Interactive Flow Simulation
+            </button>
+          </div>
+          <div class="status-indicator" id="execution-status">
+            <span class="status-pulse"></span> Ready for Input
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div class="input-wrapper">
+            <span class="search-prefix">❯</span>
+            <input type="text" id="query-input" placeholder="Ask a codebase question (e.g., 'Where is document chunking implemented?')" value="Where is the document chunking logic implemented?">
+            <button class="clear-btn" onclick="clearQuery()" title="Clear query">×</button>
+          </div>
+          <button class="execute-btn" id="btn-run" onclick="executeCurrentQuery()">
+            <span class="btn-text">Execute Flow</span>
+            <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Interactive Question Shelf -->
+        <div class="question-shelf">
+          <div class="shelf-header">
+            <span class="shelf-title">💡 Explore Questions by Agent Role (Click to test):</span>
+            <div class="category-filters">
+              <button class="cat-pill active" id="cat-all" onclick="filterCategory('all')">All (10)</button>
+              <button class="cat-pill" id="cat-search" onclick="filterCategory('search')">🔍 Code Search</button>
+              <button class="cat-pill" id="cat-mapper" onclick="filterCategory('mapper')">📐 Architecture</button>
+              <button class="cat-pill" id="cat-guide" onclick="filterCategory('guide')">🧭 Onboarding</button>
+              <button class="cat-pill" id="cat-explainer" onclick="filterCategory('explainer')">📖 Explainer MCP</button>
+              <button class="cat-pill" id="cat-negative" onclick="filterCategory('negative')">🛡️ Hallucination Check</button>
+            </div>
+          </div>
+          <div class="questions-grid" id="questions-grid">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Visual Stage: Topology + Live Trace -->
+    <main class="observability-grid">
+      <!-- Agent Network Topology Visualizer -->
+      <section class="panel topology-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <circle cx="19" cy="5" r="2"></circle>
+              <circle cx="5" cy="5" r="2"></circle>
+              <circle cx="5" cy="19" r="2"></circle>
+              <circle cx="19" cy="19" r="2"></circle>
+              <line x1="12" y1="9" x2="19" y2="5"></line>
+              <line x1="12" y1="9" x2="5" y2="5"></line>
+              <line x1="12" y1="15" x2="5" y2="19"></line>
+              <line x1="12" y1="15" x2="19" y2="19"></line>
+            </svg>
+            <h2>MULTI-AGENT TOPOLOGY & ROUTING FLOW</h2>
+          </div>
+          <div class="sim-controls">
+            <button class="sim-btn" id="sim-play-pause" onclick="toggleSimPlay()" title="Play / Pause flow">▶ Play</button>
+            <button class="sim-btn" onclick="stepSimNext()" title="Step to next event">⏭ Step</button>
+            <button class="sim-btn" onclick="resetSim()" title="Reset visualizer">↺ Reset</button>
+          </div>
+        </div>
+
+        <div class="topology-stage">
+          <!-- SVG Connections Layer -->
+          <svg class="topology-svg" id="topology-svg" viewBox="0 0 700 440">
+            <defs>
+              <linearGradient id="grad-active" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.8"/>
+                <stop offset="100%" stop-color="#7928ca" stop-opacity="0.8"/>
+              </linearGradient>
+              <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+              </filter>
+            </defs>
+
+            <!-- Static Connection Beams -->
+            <line class="flow-line" id="line-searcher" x1="350" y1="220" x2="160" y2="100"></line>
+            <line class="flow-line" id="line-mapper" x1="350" y1="220" x2="540" y2="100"></line>
+            <line class="flow-line" id="line-guide" x1="350" y1="220" x2="160" y2="340"></line>
+            <line class="flow-line" id="line-explainer" x1="350" y1="220" x2="540" y2="340"></line>
+
+            <!-- Pulsing Particles (Animated) -->
+            <circle class="flow-particle" id="particle-active" cx="350" cy="220" r="5"></circle>
+          </svg>
+
+          <!-- Node: Coordinator (Boss) -->
+          <div class="agent-node boss-node" id="node-coordinator" onclick="inspectNode('coordinator')">
+            <div class="node-badge">1 BOSS</div>
+            <div class="node-avatar">👑</div>
+            <div class="node-name">Coordinator</div>
+            <div class="node-role">Root Router</div>
+            <div class="node-status-chip" id="boss-status">IDLE</div>
+          </div>
+
+          <!-- Node 1: Code Searcher -->
+          <div class="agent-node worker-node" id="node-code_searcher" style="top: 30px; left: 80px;" onclick="inspectNode('code_searcher')">
+            <div class="node-badge">WORKER 1</div>
+            <div class="node-avatar">🔍</div>
+            <div class="node-name">Code Searcher</div>
+            <div class="node-tech">rag_search • Pinecone</div>
+            <div class="node-state-pill">STANDBY</div>
+          </div>
+
+          <!-- Node 2: Architecture Mapper -->
+          <div class="agent-node worker-node" id="node-architecture_mapper" style="top: 30px; right: 80px;" onclick="inspectNode('architecture_mapper')">
+            <div class="node-badge">WORKER 2</div>
+            <div class="node-avatar">📐</div>
+            <div class="node-name">Architecture Mapper</div>
+            <div class="node-tech">Python AST • Outline/Imports</div>
+            <div class="node-state-pill">STANDBY</div>
+          </div>
+
+          <!-- Node 3: Onboarding Guide -->
+          <div class="agent-node worker-node" id="node-onboarding_guide" style="bottom: 30px; left: 80px;" onclick="inspectNode('onboarding_guide')">
+            <div class="node-badge">WORKER 3</div>
+            <div class="node-avatar">🧭</div>
+            <div class="node-name">Onboarding Guide</div>
+            <div class="node-tech">Quickstart • Read Order</div>
+            <div class="node-state-pill">STANDBY</div>
+          </div>
+
+          <!-- Node 4: Code Explainer -->
+          <div class="agent-node worker-node" id="node-code_explainer" style="bottom: 30px; right: 80px;" onclick="inspectNode('code_explainer')">
+            <div class="node-badge">WORKER 4</div>
+            <div class="node-avatar">📖</div>
+            <div class="node-name">Code Explainer</div>
+            <div class="node-tech">Filesystem MCP Server</div>
+            <div class="node-state-pill">STANDBY</div>
+          </div>
+        </div>
+
+        <div class="topology-footer">
+          <div class="footer-legend">
+            <span class="legend-item"><span class="legend-dot active-dot"></span> Active Agent</span>
+            <span class="legend-item"><span class="legend-dot tool-dot"></span> Tool Execution</span>
+            <span class="legend-item"><span class="legend-dot loop-dot"></span> Loop-Guard Safe</span>
+          </div>
+
+          <!-- Coordinator Decision Card in plain English -->
+          <div class="decision-box" id="coordinator-decision-box">
+            <div class="decision-badge">🤖 WHY THIS AGENT?</div>
+            <div class="decision-text" id="decision-text">Select any question above to see why the Coordinator assigns it to this specific specialist.</div>
+          </div>
+
+          <div class="active-task-desc" id="flow-narrative">
+            Ready to route: Select a question above or type your own to watch agent choreography.
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Interaction Trace & Telemetry -->
+      <section class="panel trace-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <h2>LIVE INTERACTION TRACE & TELEMETRY</h2>
+          </div>
+          <div class="timer-badge" id="telemetry-elapsed">0.00s</div>
+        </div>
+
+        <!-- Stepper Visualizer -->
+        <div class="trace-stepper">
+          <div class="step-card" id="step-1">
+            <div class="step-num">1</div>
+            <div class="step-info">
+              <div class="step-title">Question Ingestion</div>
+              <div class="step-desc">Input received & tokenized</div>
+            </div>
+            <div class="step-status">IDLE</div>
+          </div>
+          <div class="step-card" id="step-2">
+            <div class="step-num">2</div>
+            <div class="step-info">
+              <div class="step-title">Boss Decision</div>
+              <div class="step-desc">Coordinator transfers to worker</div>
+            </div>
+            <div class="step-status">IDLE</div>
+          </div>
+          <div class="step-card" id="step-3">
+            <div class="step-num">3</div>
+            <div class="step-info">
+              <div class="step-title">Tool Execution</div>
+              <div class="step-desc">Deterministic tool or vector query</div>
+            </div>
+            <div class="step-status">IDLE</div>
+          </div>
+          <div class="step-card" id="step-4">
+            <div class="step-num">4</div>
+            <div class="step-info">
+              <div class="step-title">Context Injection</div>
+              <div class="step-desc">Provenance extracted & bound</div>
+            </div>
+            <div class="step-status">IDLE</div>
+          </div>
+          <div class="step-card" id="step-5">
+            <div class="step-num">5</div>
+            <div class="step-info">
+              <div class="step-title">Grounded Answer</div>
+              <div class="step-desc">Final synthesis output delivered</div>
+            </div>
+            <div class="step-status">IDLE</div>
+          </div>
+        </div>
+
+        <!-- Telemetry Log Terminal -->
+        <div class="terminal-container">
+          <div class="terminal-bar">
+            <span class="term-dot red"></span>
+            <span class="term-dot yellow"></span>
+            <span class="term-dot green"></span>
+            <span class="term-title">adk-events.log</span>
+            <button class="term-copy" onclick="copyTraceLogs()">Copy Log</button>
+          </div>
+          <div class="terminal-body" id="trace-terminal">
+            <div class="log-line text-muted">[System] Observatory ready. Awaiting user query...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Detailed Response & Provenance Section -->
+    <section class="results-section">
+      <div class="results-grid">
+        <!-- Grounded Final Response Card -->
+        <div class="panel response-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <h2>GROUNDED AGENT RESPONSE</h2>
+            </div>
+            <div class="response-header-actions">
+              <span class="handoff-pill" id="response-handoff-pill">Awaiting Query</span>
+              <button class="action-btn" onclick="copyFinalAnswer()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy Response
+              </button>
+            </div>
+          </div>
+          <div class="response-body" id="final-answer-content">
+            <div class="empty-state">
+              <div class="empty-icon">💬</div>
+              <p>No query executed yet. Click "Execute Flow" or pick a benchmark preset above to view the grounded multi-agent response.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Provenance & Metrics Inspector -->
+        <div class="panel metrics-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <h2>PROVENANCE & HARDWARE TELEMETRY</h2>
+            </div>
+            <span class="badge-mini" id="metric-worker-badge">NONE</span>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Assigned Worker</div>
+              <div class="metric-val" id="metric-worker">--</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Invoked Tool</div>
+              <div class="metric-val text-cyan" id="metric-tool">--</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Execution Latency</div>
+              <div class="metric-val text-amber" id="metric-latency">--</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Loop-Guard State</div>
+              <div class="metric-val text-green" id="metric-loopguard">SECURE</div>
+            </div>
+          </div>
+
+          <div class="provenance-container">
+            <div class="prov-header">
+              <span>Source Provenance & Context Chunks</span>
+              <span class="prov-badge" id="prov-count">0 items</span>
+            </div>
+            <div class="prov-content" id="provenance-body">
+              <div class="text-muted text-sm">Source files, line numbers, and extracted code passages will appear here upon tool completion.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bottom Deep Dive Navigation Tabs -->
+    <section class="deepdive-section">
+      <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab('benchmarks')">🏆 Golden Benchmark Scorecard (100% Pass)</button>
+        <button class="tab-btn" onclick="switchTab('codebase')">📁 Target Codebase & Vector Store (Naive_RAG)</button>
+        <button class="tab-btn" onclick="switchTab('architecture')">📊 8-Stage Naive RAG vs Multi-Agent Architecture</button>
+      </div>
+
+      <!-- Tab 1: Benchmark Scorecard -->
+      <div class="tab-content active" id="tab-benchmarks">
+        <div class="table-card">
+          <div class="table-header-row">
+            <div>
+              <h3>5-QUESTION CANONICAL EVALUATION BENCHMARK</h3>
+              <p>Verified with active timeout guards, tool-loop termination, and factually grounded citations.</p>
+            </div>
+            <button class="action-btn" onclick="reloadBenchmarks()">Refresh Scorecard</button>
+          </div>
+          <div class="table-responsive">
+            <table class="bench-table">
+              <thead>
+                <tr>
+                  <th>Test ID</th>
+                  <th>Evaluation Question</th>
+                  <th>Target Worker</th>
+                  <th>Invoked Tool(s)</th>
+                  <th>Latency</th>
+                  <th>Verification</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="benchmarks-table-body">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Codebase Inspector -->
+      <div class="tab-content" id="tab-codebase">
+        <div class="codebase-grid">
+          <div class="panel filelist-panel">
+            <h3>Naive_RAG Knowledge Base Files</h3>
+            <div class="file-list" id="codebase-files-list">
+              <!-- Injected via JavaScript -->
+            </div>
+          </div>
+          <div class="panel fileview-panel">
+            <div class="fileview-header">
+              <span id="fileview-title">config.py</span>
+              <span class="badge-mini" id="fileview-lines">0 lines</span>
+            </div>
+            <pre class="code-box"><code id="fileview-content">Select a file from the left to inspect its implementation.</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Architecture Walkthrough -->
+      <div class="tab-content" id="tab-architecture">
+        <div class="arch-card">
+          <h3>Day 4 Slide 13: The 8-Stage Naive RAG Architecture</h3>
+          <div class="rag-stages-flow">
+            <div class="rag-pipeline-group">
+              <h4>OFFLINE INDEXING PIPELINE</h4>
+              <div class="stage-nodes-row">
+                <div class="stage-box">
+                  <div class="stage-num">Stage 1</div>
+                  <div class="stage-name">load_document()</div>
+                  <div class="stage-sub">Ingestion (UTF-8)</div>
+                </div>
+                <div class="stage-arrow">➔</div>
+                <div class="stage-box">
+                  <div class="stage-num">Stage 2</div>
+                  <div class="stage-name">chunk_document()</div>
+                  <div class="stage-sub">Sliding Window (500/100)</div>
+                </div>
+                <div class="stage-arrow">➔</div>
+                <div class="stage-box">
+                  <div class="stage-num">Stage 3</div>
+                  <div class="stage-name">embed_chunks()</div>
+                  <div class="stage-sub">NVIDIA Nemotron (2048d)</div>
+                </div>
+                <div class="stage-arrow">➔</div>
+                <div class="stage-box">
+                  <div class="stage-num">Stage 4</div>
+                  <div class="stage-name">store_in_vector_db()</div>
+                  <div class="stage-sub">Pinecone Serverless</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rag-pipeline-group">
+              <h4>ONLINE QUERY PIPELINE</h4>
+              <div class="stage-nodes-row">
+                <div class="stage-box">
+                  <div class="stage-num">Stage 5</div>
+                  <div class="stage-name">embed_query()</div>
+                  <div class="stage-sub">NVIDIA NIM (2048d)</div>
+                </div>
+                <div class="stage-arrow">➔</div>
+                <div class="stage-box">
+                  <div class="stage-num">Stage 6</div>
+                  <div class="stage-name">retrieve_top_k()</div>
+                  <div class="stage-sub">Cosine Similarity (Top 3)</div>
+                </div>
+                <div class="stage-arrow">➔</div>
+                <div class="stage-box">
+                  <div class="stage-num">Stage 7</div>
+                  <div class="stage-name">build_prompt()</div>
+                  <div class="stage-sub">Context Injection</div>
+                </div>
+                <div class="stage-arrow">➔</div>
+                <div class="stage-box">
+                  <div class="stage-num">Stage 8</div>
+                  <div class="stage-name">generate_answer()</div>
+                  <div class="stage-sub">Llama 3.2 NIM</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div>DEBO ASSIGNMENT 2 • Multi-Agent Code Helper & Naive RAG Architecture</div>
+      <div class="footer-links">
+        <span>FastAPI Backend Active on Port 8000</span>
+        <span>•</span>
+        <span>Google ADK (Agent Development Kit)</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

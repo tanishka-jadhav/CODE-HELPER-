@@ -1,0 +1,99 @@
+[
+  {
+    "id": "Q1_SEARCH",
+    "question": "Where is the document chunking logic implemented?",
+    "expected_worker": "code_searcher",
+    "actual_worker": "code_searcher",
+    "routed_workers": [
+      "code_searcher"
+    ],
+    "tools_called": [
+      "transfer_to_agent",
+      "rag_search"
+    ],
+    "elapsed_sec": 45.02,
+    "worker_matched": true,
+    "tool_matched": true,
+    "content_matched": true,
+    "passed": true,
+    "final_answer": "--- Result 1 (Relevance: 0.580) ---\nFile: Naive_RAG/config.py\nLines: 156-162\nCode:\nregion=pinecone_region,\n        chunk_size=chunk_size,\n        chunk_overlap=chunk_overlap,\n        top_k=top_k,\n        use_mock_ai=use_mock_ai,\n        use_local_vector_db=use_local_vector_db,\n    )\n\n--- Result 2 (Relevance: 0.559) ---\nFile: Naive_RAG/indexer.py\nLines: 240-264\nCode:\n60)\n\n    # 1. Ingestion\n    raw_document = load_document(file_path=file_path)\n\n    # 2. Chunking\n    chunk_list = chunk_document(\n        text=raw_document,\n        chunk_size=config.chunk_size,\n        chunk_overlap=config.chunk_overlap,\n    )\n\n    # 3. Embedding\n    embedded_chunks = embed_chunks(\n        chunks=chunk_list,\n        config=config,\n    )\n\n    # 4. Storage\n    store_in_vector_db(\n        chunks_with_embeddings=embedded_chunks,\n        config=config,\n    )\n\n    print(\"\\n\" + \"#\" *\n\n--- Result 3 (Relevance: 0.558) ---\nFile: Naive_RAG/indexer.py\nLines: 224-246\nCode:\nn_indexing_pipeline(\n    file_path: str,\n    config: RAGConfig | None = None,\n) -> list[dict]:\n    \"\"\"\n    Execute the complete 4-stage Indexing Pipeline sequentially:\n    1. Document Ingestion\n    2. Chunking\n    3. Embedding\n    4. Storage\n    \"\"\"\n    if config is None:\n        config = get_rag_config()\n\n    print(\"\\n\" + \"#\" * 60)\n    print(\"STARTING NAIVE RAG INDEXING PIPELINE\")\n    print(\"#\" * 60)\n\n    # 1. Ingestion\n    raw_document = load_document(file_path=file_path)\n\n    # 2. Chunking"
+  },
+  {
+    "id": "Q2_MAPPER",
+    "question": "Which files import config.py?",
+    "expected_worker": "architecture_mapper",
+    "actual_worker": "architecture_mapper",
+    "routed_workers": [
+      "architecture_mapper"
+    ],
+    "tools_called": [
+      "transfer_to_agent",
+      "find_import_dependencies",
+      "find_import_dependencies"
+    ],
+    "elapsed_sec": 4.48,
+    "worker_matched": true,
+    "tool_matched": true,
+    "content_matched": true,
+    "passed": true,
+    "final_answer": "Files that import 'config':\n- indexer.py (Line 26)\n- main.py (Line 31)\n- query_pipeline.py (Line 23)\n- vector_store.py (Line 22)\n\n[DEPENDENCY SEARCH COMPLETE]: Report these matching files directly to the user. Do not call any further tools."
+  },
+  {
+    "id": "Q3_GUIDE",
+    "question": "I am new to this project. Where do I start?",
+    "expected_worker": "onboarding_guide",
+    "actual_worker": "onboarding_guide",
+    "routed_workers": [
+      "onboarding_guide"
+    ],
+    "tools_called": [
+      "transfer_to_agent",
+      "get_project_quickstart_and_modules"
+    ],
+    "elapsed_sec": 23.85,
+    "worker_matched": true,
+    "tool_matched": true,
+    "content_matched": true,
+    "passed": true,
+    "final_answer": "Naive_RAG Project Onboarding Guide:\n1. Purpose: A reference 8-stage RAG system using NVIDIA NIM and Pinecone.\n2. Recommended Reading Order:\n - config.py (Settings & credentials)\n - indexer.py (Offline indexing: Read -> Split -> Embed -> Store)\n - vector_store.py (Pinecone client and cosine similarity)\n - query_pipeline.py (Online query: Embed -> Retrieve -> Augment -> Generate)\n - main.py (Interactive CLI demonstration)\n3. Run Commands:\n - Full Demo: python main.py\n - Indexing Only: python main.py --index\n - Custom Query: python main.py --query '<question>'\n - Compare: python main.py --compare\n\n[ONBOARDING GUIDE COMPLETE]: Provide these exact details directly to the user. Do not call any further tools."
+  },
+  {
+    "id": "Q4_EXPLAINER",
+    "question": "Explain vector_store.py in detail.",
+    "expected_worker": "code_explainer",
+    "actual_worker": "code_explainer",
+    "routed_workers": [
+      "code_explainer"
+    ],
+    "tools_called": [
+      "transfer_to_agent",
+      "read_file"
+    ],
+    "elapsed_sec": 23.07,
+    "worker_matched": true,
+    "tool_matched": true,
+    "content_matched": true,
+    "passed": true,
+    "final_answer": "Based on the provided code, the vector_store.py file is a Python script that provides an interface to manage vector databases using Pinecone Serverless. It includes functions for initializing, upserting, and querying vector embeddings. The script also includes a local fallback to a transparent JSON vector store in case the Pinecone API key is not configured.\n\nThe script uses the Pinecone Python client to interact with the Pinecone serverless index. It includes functions for ensuring the existence of the Pinecone index, upserting vectors, and querying the vector database. The script also includes a local fallback to a JSON vector store, which is used if the Pinecone API key is not configured.\n\nThe script includes several functions, including:\n\n*   `calculate_cosine_similarity`: calculates the cosine similarity between two vectors using basic math.\n*   `get_pinecone_client`: instantiates and returns the modern Pinecone client.\n*   `ensure_pinecone_index_exists`: checks if the Pinecone index exists and creates a Serverless index if it does not.\n*   `upsert_to_vector_db`: stores chunk embeddings and text metadata into Pinecone or local fallback.\n*   `query_vector_db`: retrieves top-k most similar chunks for a query vector from Pinecone or local fallback.\n\nThe script also includes a local fallback to a JSON vector store, which is used if the Pinecone API key is not configured. The local fallback includes functions for saving and loading vectors from the JSON file.\n\nOverall, the vector_store.py script provides a convenient interface for managing vector databases using Pinecone Serverless, with a local fallback to ensure live reliability."
+  },
+  {
+    "id": "Q5_NEGATIVE",
+    "question": "Where is Stripe payment billing handled?",
+    "expected_worker": "code_searcher",
+    "actual_worker": "code_searcher",
+    "routed_workers": [
+      "code_searcher"
+    ],
+    "tools_called": [
+      "transfer_to_agent",
+      "rag_search",
+      "rag_search"
+    ],
+    "elapsed_sec": 7.48,
+    "worker_matched": true,
+    "tool_matched": true,
+    "content_matched": true,
+    "passed": true,
+    "final_answer": "I could not find that in the codebase."
+  }
+]
