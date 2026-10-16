@@ -327,3 +327,5 @@ I could not find that in the codebase.
 | **Keys in .env, not in the code** | Loaded via `python-dotenv`, protected by `.gitignore`, `.env.example` provided | Verified |
 | **Runs with `adk run` or `adk web`** | Validated via ADK CLI runner and web dashboard | Verified |
 | **Sample questions & problem fix** | 5 benchmarked evaluations and 4 documented problem fixes included | Verified |
+#   C O D E - H E L P E R -  
+ 
