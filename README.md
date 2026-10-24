@@ -12,43 +12,81 @@
 [![Benchmark](https://img.shields.io/badge/Evaluation-5%2F5%20Golden%20Tests%20Passed-success?style=for-the-badge&logo=checkmarx&logoColor=white)](https://github.com/tanishka-jadhav/CODE-HELPER-)
 
 <p align="center">
-  <a href="#-executive-summary">Executive Summary</a> •
-  <a href="#-multi-agent-team-architecture">Agent Architecture</a> •
-  <a href="#-tools-catalog">Tools Catalog</a> •
-  <a href="#-manual-5-step-rag-pipeline">5-Step RAG</a> •
-  <a href="#-chunking-strategy--empirical-analysis">Chunking Strategy</a> •
-  <a href="#-model-context-protocol-mcp">MCP Integration</a> •
-  <a href="#-quickstart--execution-guide">Quickstart</a> •
-  <a href="#-golden-evaluation-showcase">Benchmarks</a> •
-  <a href="#-engineering-challenges--fixes">Engineering Fixes</a>
+  <a href="#in-simple-words">In Simple Words</a> •
+  <a href="#executive-summary">Executive Summary</a> •
+  <a href="#system-architecture">Agent Architecture</a> •
+  <a href="#tools-catalog">Tools Catalog</a> •
+  <a href="#rag-pipeline">5-Step RAG</a> •
+  <a href="#chunking-strategy">Chunking Strategy</a> •
+  <a href="#mcp-integration">MCP Integration</a> •
+  <a href="#repository-layout">Repository Layout</a> •
+  <a href="#quickstart">Quickstart</a> •
+  <a href="#golden-evaluation">Benchmarks</a> •
+  <a href="#engineering-fixes">Engineering Fixes</a> •
+  <a href="#compliance-checklist">Compliance</a>
 </p>
 
 </div>
 
 ---
 
+<a id="table-of-contents"></a>
 ## 📖 Table of Contents
-1. [🌟 Executive Summary](#-executive-summary)
-2. [🏛️ Multi-Agent Team Architecture](#️-multi-agent-team-architecture)
-3. [🛠️ Comprehensive Tools Catalog](#️-comprehensive-tools-catalog)
-4. [🔍 Manual 5-Step RAG Pipeline](#-manual-5-step-rag-pipeline)
-5. [⚖️ Chunking Strategy & Empirical Analysis](#️-chunking-strategy--empirical-analysis)
-6. [🔌 Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
-7. [📁 Repository Layout](#-repository-layout)
-8. [🚀 Quickstart & Execution Guide](#-quickstart--execution-guide)
-9. [📊 Golden Evaluation Showcase (Benchmark Results)](#-golden-evaluation-showcase)
-10. [🛡️ Engineering Challenges & Production Fixes](#️-engineering-challenges--production-fixes)
-11. [✅ Student Guide Compliance Checklist](#-student-guide-compliance-checklist)
+
+1. [💡 In Simple Words: What is this project? (Quick 60-Second Guide)](#in-simple-words)
+2. [🌟 Executive Summary](#executive-summary)
+3. [🏛️ System Architecture & Multi-Agent Design](#system-architecture)
+4. [🛠️ Comprehensive Tools Catalog](#tools-catalog)
+5. [🔍 Manual 5-Step RAG Pipeline](#rag-pipeline)
+6. [⚖️ Chunking Strategy & Why Naive RAG](#chunking-strategy)
+7. [🔌 Model Context Protocol (MCP) Integration](#mcp-integration)
+8. [📁 Repository Layout](#repository-layout)
+9. [🚀 Quickstart & Execution Guide](#quickstart)
+10. [📊 Golden Evaluation Showcase (Benchmark Results)](#golden-evaluation)
+11. [🛡️ Engineering Challenges & Production Fixes](#engineering-fixes)
+12. [✅ Student Guide Compliance Checklist](#compliance-checklist)
 
 ---
 
-## 🌟 Executive Summary
+<a id="in-simple-words"></a>
+## 1. 💡 In Simple Words: What is this project? (Quick 60-Second Guide)
+
+> **Think of this system as an automated senior engineer helping you understand a new Python project.**
+
+### The Problem
+When a developer opens an unfamiliar repository, they waste hours asking:
+* *"Where is this function located?"*
+* *"What does this entire file do?"*
+* *"Which files import `config.py`?"*
+* *"Where do I start reading this code?"*
+
+### The Solution: A Team of 5 AI Agents
+Instead of one generic chatbot trying to guess everything, we have a **team with 1 Boss and 4 Specialists**:
+
+| Agent | Real-World Role | What It Does | Tool Used |
+| :--- | :--- | :--- | :--- |
+| 👑 **Coordinator (Boss)** | *Project Manager* | Listens to your question and passes it to the right specialist. **Never answers directly.** | `transfer_to_agent` |
+| 🔍 **Code Searcher** | *Search Engine* | Finds exact functions and lines in code using vector similarity. | `rag_search` (Custom 5-Step RAG + Pinecone) |
+| 📖 **Code Explainer** | *Code Reviewer* | Reads a whole file safely and explains the architecture end-to-end. | `read_file`, `list_directory` (MCP Filesystem Server) |
+| 📐 **Architecture Mapper** | *Code Inspector* | Checks imports and function outlines with **100% mathematical accuracy** (Zero AI guessing). | `find_import_dependencies`, `get_file_outline`, `get_codebase_tree` (Python AST) |
+| 🧭 **Onboarding Guide** | *Mentor* | Welcomes new developers, explains what the project does, and gives the reading order. | `get_project_quickstart_and_modules` (Curated Knowledge Base) |
+
+### The 3 Key Superpowers
+1. **Manual 5-Step RAG (No LangChain/LlamaIndex)**: Built from scratch: `Read` ➔ `Split` (500 chars) ➔ `Embed` (NVIDIA NIM) ➔ `Store` (Pinecone) ➔ `Search`.
+2. **Safe File Reading (MCP)**: Uses the official Model Context Protocol (`@modelcontextprotocol/server-filesystem`) to read files without risking system security.
+3. **Zero-Hallucination AST Tools**: Code imports and structure are parsed using Python's built-in `ast` parser, so the AI never guesses or fabricates file connections.
+
+---
+
+<a id="executive-summary"></a>
+## 2. 🌟 Executive Summary
 
 **Multi-Agent Code Helper** is an intelligent developer assistant designed to onboard engineers and navigate Python codebases with high factual accuracy. Built using the **Google Agent Development Kit (ADK)**, **NVIDIA NIM** (via **LiteLLM**), and **Pinecone Serverless**, the system employs a disciplined hierarchy of **1 Coordinator Boss** and **4 specialized Worker agents** that handle code search, full-file explanation, structural dependency mapping, and newcomer orientation. Rather than relying on LLM guesswork, the team combines a manual 5-step semantic RAG engine, Model Context Protocol (MCP) sandboxed file access, and deterministic Python Abstract Syntax Tree (AST) analysis.
 
 ---
 
-## 🏛️ System Architecture & Multi-Agent Design
+<a id="system-architecture"></a>
+## 3. 🏛️ System Architecture & Multi-Agent Design
 
 The Multi-Agent Code Helper is engineered using a **tiered, service-oriented multi-agent architecture** managed by the **Google Agent Development Kit (ADK)**. 
 
@@ -57,37 +95,36 @@ The Multi-Agent Code Helper is engineered using a **tiered, service-oriented mul
 ```mermaid
 graph TD
     %% Tier 1: Client Interfaces
-    subgraph TIER_CLIENT ["🖥️ Tier 1: Presentation & Client Interfaces"]
-        CLI["ADK CLI Terminal<br/><code>adk run code_helper</code>"]
-        WEB["ADK Web Dashboard<br/><code>adk web</code>"]
-        OBS["Observatory Dashboard<br/><code>http://127.0.0.1:8080</code>"]
+    subgraph TIER_CLIENT ["Tier 1: Presentation and Client Interfaces"]
+        CLI["ADK CLI Terminal<br/>adk run code_helper"]
+        OBS["Observatory Dashboard<br/>http://127.0.0.1:8080"]
     end
 
     %% Tier 2: Coordinator & Gateway
-    subgraph TIER_ROUTING ["👑 Tier 2: Orchestration & Intelligent Routing"]
+    subgraph TIER_ROUTING ["Tier 2: Orchestration and Intelligent Routing"]
         BOSS["Coordinator Boss Agent<br/>(LlmAgent root_agent)"]
         LITELLM["LiteLLM Universal Gateway<br/>(NVIDIA NIM Translation)"]
-        ROUTER["Intent Evaluator & Triage<br/>(transfer_to_agent)"]
+        ROUTER["Intent Evaluator and Triage<br/>(transfer_to_agent)"]
     end
 
     %% Tier 3: Specialized Workers
-    subgraph TIER_WORKERS ["⚙️ Tier 3: Autonomous Specialist Workers"]
-        W_SEARCH["🔍 Code Searcher<br/>(Semantic Code Locator)"]
-        W_EXPLAIN["📖 Code Explainer<br/>(Whole-File Architecture)"]
-        W_MAPPER["📐 Architecture Mapper<br/>(AST Dependency Engine)"]
-        W_GUIDE["🧭 Onboarding Guide<br/>(Newcomer Orientation)"]
+    subgraph TIER_WORKERS ["Tier 3: Autonomous Specialist Workers"]
+        W_SEARCH["Code Searcher<br/>(Semantic Code Locator)"]
+        W_EXPLAIN["Code Explainer<br/>(Whole-File Architecture)"]
+        W_MAPPER["Architecture Mapper<br/>(AST Dependency Engine)"]
+        W_GUIDE["Onboarding Guide<br/>(Newcomer Orientation)"]
     end
 
     %% Tier 4: Tool Execution Engines
-    subgraph TIER_TOOLS ["🛠️ Tier 4: Execution & Tool Engines"]
-        T_RAG["rag_search()<br/>Query Embedding & Cosine KNN"]
+    subgraph TIER_TOOLS ["Tier 4: Execution and Tool Engines"]
+        T_RAG["rag_search()<br/>Query Embedding and Cosine KNN"]
         T_MCP["McpToolset Client<br/>Stdio JSON-RPC Protocol"]
-        T_AST["Python AST Engine<br/>ast.parse & Node Visitor"]
-        T_GUIDE["Onboarding Spec Tool<br/>Module Roadmap & Run Guide"]
+        T_AST["Python AST Engine<br/>ast.parse and Node Visitor"]
+        T_GUIDE["Onboarding Spec Tool<br/>Module Roadmap and Run Guide"]
     end
 
     %% Tier 5: External Services & Storage
-    subgraph TIER_INFRA ["☁️ Tier 5: External Services & Storage"]
+    subgraph TIER_INFRA ["Tier 5: External Services and Storage"]
         NVIDIA_LLM["NVIDIA NIM Chat API<br/>meta/llama-3.2-11b-vision-instruct"]
         NVIDIA_EMBED["NVIDIA NIM Embeddings<br/>nvidia/nemotron-3-embed-1b (2048-dim)"]
         PINECONE["Pinecone Serverless DB<br/>code-helper (AWS us-east-1, Cosine)"]
@@ -97,7 +134,6 @@ graph TD
 
     %% Cross-Tier Connections
     CLI --> BOSS
-    WEB --> BOSS
     OBS --> BOSS
 
     BOSS --> LITELLM
@@ -127,7 +163,7 @@ graph TD
     classDef tool fill:#14532D,stroke:#4ADE80,stroke-width:1.5px,color:#F0FDF4;
     classDef infra fill:#1C1917,stroke:#F59E0B,stroke-width:1.5px,color:#FEF3C7;
 
-    class CLI,WEB,OBS client;
+    class CLI,OBS client;
     class BOSS,LITELLM,ROUTER boss;
     class W_SEARCH,W_EXPLAIN,W_MAPPER,W_GUIDE worker;
     class T_RAG,T_MCP,T_AST,T_GUIDE tool;
@@ -136,10 +172,9 @@ graph TD
 
 ### Architectural Principles & Layer Breakdown
 
-1. **Presentation Tier (Multi-Channel Interface)**:
-   - **ADK Terminal Runner (`adk run code_helper`)**: Direct stdin/stdout CLI REPL for developers.
-   - **ADK Web UI (`adk web`)**: Official Google session-graph visualizer on port 8000.
-   - **Observatory Dashboard (`frontend/server.py`)**: Custom real-time visual flight simulator and chat interface on port 8080.
+1. **Presentation Tier (User Interfaces)**:
+   - **ADK Terminal Runner (`adk run code_helper`)**: Direct stdin/stdout CLI REPL for developers in the console.
+   - **Observatory Dashboard (`frontend/server.py`)**: The project's graphical dashboard on port 8080—featuring live agent flight telemetry, interactive chat, latency metrics, and real-time AST structure trees.
 
 2. **Orchestration Tier (The Coordinator Boss)**:
    - **Invariant**: The Boss **never** answers technical questions directly.
@@ -152,7 +187,7 @@ graph TD
 
 4. **Tool & Engine Tier**:
    - **Custom RAG Engine (`rag_search`)**: 5-step manual retrieval pipeline with a 0.72 similarity threshold and keyword validation guard.
-   - **Deterministic AST Parser (`find_import_dependencies`, `get_file_outline`)**: Uses Python's native `ast` module to read language grammar with 100% mathematical accuracy. Zero LLM guessing.
+   - **Deterministic AST Parser (`find_import_dependencies`, `get_file_outline`, `get_codebase_tree`)**: Uses Python's native `ast` and `pathlib` modules to inspect language grammar with 100% mathematical accuracy. Zero LLM guessing.
    - **Model Context Protocol Client (`file_tools`)**: Bridges the agent to the official `@modelcontextprotocol/server-filesystem` JSON-RPC stdio daemon.
 
 5. **Persistence & Inference Tier**:
@@ -172,12 +207,12 @@ graph TD
 
 ---
 
-
-## 🛠️ Comprehensive Tools Catalog
+<a id="tools-catalog"></a>
+## 4. 🛠️ Comprehensive Tools Catalog
 
 Per assignment specifications:
 - ✅ **At least 5 custom tools are built** (6 custom tools total, excluding MCP server built-in tools).
-- ✅ **At least one tool uses no AI** (4 tools run plain deterministic Python).
+- ✅ **At least one tool uses no AI** (4 tools run plain deterministic Python standard library).
 - ✅ **Filesystem MCP server tools do not count toward the custom 5.**
 
 | Tool Function | Implementation Engine | Technology | AI vs Plain Python | Worker Owner | Purpose & Output Contract |
@@ -193,11 +228,12 @@ Per assignment specifications:
 
 ---
 
-## 🔍 Manual 5-Step RAG Pipeline
+<a id="rag-pipeline"></a>
+## 5. 🔍 Manual 5-Step RAG Pipeline
 
 Built entirely from scratch in `code_helper/index_codebase.py` and `code_helper/tools/search_tools.py` **without LangChain or LlamaIndex**:
 
-```
+```text
 [Target Codebase: Naive_RAG/*.py]
            │
            ▼
@@ -230,26 +266,38 @@ Built entirely from scratch in `code_helper/index_codebase.py` and `code_helper/
 
 ---
 
-## ⚖️ Chunking Strategy & Empirical Analysis
+<a id="chunking-strategy"></a>
+## 6. ⚖️ Chunking Strategy & Why Naive RAG
 
-The chunking mechanism uses a **character-level sliding window** with exact line-boundary mapping.
+### 📏 Simple Chunking Strategy (Easy to Explain)
 
-* **Production Parameters**:
-  * **Chunk Size**: `500` characters
-  * **Chunk Overlap**: `100` characters
-  * **Step / Stride**: `400` characters
+The chunking mechanism uses a **character-level sliding window** with exact source line tracking:
 
-### Empirical Comparison of Chunk Sizes
-
-| Chunk Configuration | Semantic Precision | Context Completeness | Noise Level | Assessment for Python Codebase |
-| :--- | :---: | :---: | :---: | :--- |
-| **Small** *(200 chars / 40 overlap)* | ⚠️ Low | ❌ Poor | Low | **Under-chunking**: Frequently splits class/function headers from their logic or cuts docstrings in half. Fragments lack standalone semantic meaning. |
-| **Large** *(1500 chars / 300 overlap)* | ⚠️ Low | ✅ High | ❌ High | **Over-chunking**: Combines 2 to 3 unrelated functions into a single embedding vector. Dilutes cosine similarity scores and injects irrelevant code into the LLM context. |
-| **Selected** *(500 chars / 100 overlap)* | ✅ **High** | ✅ **Optimal** | ✅ **Minimal** | **Optimal Sweet Spot**: Matches the typical length of a Python function, class header, or docstring block in `Naive_RAG`. The 100-character overlap prevents boundary truncation. |
+* **Chunk Size: 500 characters** (~10 to 15 lines of Python code):
+  * Matches the natural size of a typical Python function, class header, or logic block.
+  * Small enough to remain semantically focused on a single task without diluting the embedding vector.
+* **Chunk Overlap: 100 characters**:
+  * Prevents boundary cut-offs. If a function header or docstring ends near the 500-character mark, the 100-character overlap ensures it is captured intact in the next chunk.
+* **Exact Line Provenance**:
+  * Every chunk records its source file, `start_line`, and `end_line` metadata in Pinecone, enabling the agent to cite exact code locations in its answers.
 
 ---
 
-## 🔌 Model Context Protocol (MCP) Integration
+### 🔍 Why Naive RAG Compared to Other RAG Architectures?
+
+There are several paradigms of RAG in modern AI: **Naive RAG**, **Advanced RAG (HyDE / Multi-Query)**, and **GraphRAG**. Here is why we chose **Naive RAG** for this project:
+
+| RAG Pattern | How It Works | Why We Did or Didn't Use It |
+| :--- | :--- | :--- |
+| **Naive RAG** *(Our Choice)* | **Index ➔ Embed ➔ Search ➔ Generate**.<br/>Direct cosine similarity retrieval from Pinecone. | ✅ **Best Fit**: Fast, lightweight, and deterministic. Gives exact code locations in milliseconds with minimal API cost and zero extra latency. |
+| **Advanced RAG** *(HyDE / Multi-Query)* | Generates multiple hypothetical answers or re-writes questions using an LLM before searching. | ❌ **Unnecessary Overhead**: Generating 3 extra queries adds 5–10 seconds of latency and burns extra tokens, without improving search accuracy for concrete code functions. |
+| **GraphRAG** *(Knowledge Graphs)* | Uses an LLM to extract entity-relationship graphs (nodes and edges) from text. | ❌ **Heavy & Expensive**: Overkill for code dependencies. We already have **Python's native AST parser**, which extracts imports and relationships with **100% mathematical accuracy** without needing an expensive knowledge graph. |
+| **Modular / Agentic RAG** *(Our Architecture)* | Pairs a lightweight Naive RAG search with an intelligent multi-agent coordinator (Google ADK). | ✅ **The Real Win**: Instead of overcomplicating the RAG pipeline itself, the **Boss Agent** intelligently decides *when* to use Naive RAG (for code search) and *when* to bypass it entirely (using AST for architecture, or MCP for whole-file reading). |
+
+---
+
+<a id="mcp-integration"></a>
+## 7. 🔌 Model Context Protocol (MCP) Integration
 
 The **Code Explainer** agent utilizes the **Model Context Protocol (MCP)** via `@modelcontextprotocol/server-filesystem` executed by `npx`.
 
@@ -274,14 +322,17 @@ file_tools = McpToolset(
 
 ---
 
-## 📁 Repository Layout
+<a id="repository-layout"></a>
+## 8. 📁 Repository Layout
 
-```
+```text
 DEBO ASSIGNMENT 2/
 ├── .env                              <- API keys and secrets (Never committed; in .gitignore)
 ├── .env.example                      <- Environment template for quick setup
 ├── .gitignore                        <- Ignores .env, virtual environments, caches
+├── PROJECT_EXPLANATION.md            <- Complete master guide for students & viva defense
 ├── README.md                         <- Comprehensive project documentation
+├── notes.md                          <- Presentation & viva defense spoken notes
 ├── requirements.txt                  <- Dependencies: google-adk, litellm, pinecone, mcp, openai
 │
 ├── code_helper/                      <- Main ADK Multi-Agent Package
@@ -323,7 +374,8 @@ DEBO ASSIGNMENT 2/
 
 ---
 
-## 🚀 Quickstart & Execution Guide
+<a id="quickstart"></a>
+## 9. 🚀 Quickstart & Execution Guide
 
 ### Prerequisites
 - **Python**: 3.10 or higher
@@ -332,6 +384,7 @@ DEBO ASSIGNMENT 2/
 - **Pinecone API Key**: Obtain from [pinecone.io](https://www.pinecone.io)
 
 ### 1. Installation
+
 ```powershell
 # Clone the repository
 git clone https://github.com/tanishka-jadhav/CODE-HELPER-.git
@@ -340,22 +393,42 @@ cd "CODE-HELPER-"
 # Create virtual environment
 python -m venv venv
 
-# Activate virtual environment
+# Activate virtual environment:
 # Windows PowerShell:
 .\venv\Scripts\Activate.ps1
+# Windows Command Prompt (CMD):
+venv\Scripts\activate.bat
 # macOS / Linux:
 source venv/bin/activate
 
-# Install dependencies
+# Upgrade pip and install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+> [!TIP]
+> **Windows PowerShell Execution Policy Note:**  
+> If PowerShell reports `PSSecurityException` when running `Activate.ps1`, run:  
+> `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`  
+> or call `.\venv\Scripts\python.exe` directly.
+
 ### 2. Configure Credentials
-Copy the example file to `.env`:
+
+Copy the template file to `.env`:
+
 ```powershell
+# Windows PowerShell:
 Copy-Item .env.example .env
+
+# Windows Command Prompt (CMD):
+copy .env.example .env
+
+# macOS / Linux:
+cp .env.example .env
 ```
+
 Edit `.env` with your API keys:
+
 ```env
 NVIDIA_API_KEY=nvapi-your-key-here
 NVIDIA_NIM_API_KEY=nvapi-your-key-here
@@ -372,32 +445,34 @@ PYTHONUTF8=1
 ```
 
 ### 3. Step 1: Run Offline Indexing (One-Time Setup)
-Indexes all `.py` files in `Naive_RAG/` into Pinecone:
+
+Indexes all `.py` files in `Naive_RAG/` into Pinecone Serverless:
+
 ```powershell
 python code_helper/index_codebase.py
 ```
 
 ### 4. Step 2: Run the Helper
-Choose any of the three run interfaces:
+
+You can interact with the Multi-Agent Code Helper via either the interactive terminal or the graphical web dashboard:
 
 #### Option A: Terminal Interactive Mode
 ```powershell
 adk run code_helper
 ```
+*(Direct command-line session where you can chat with the Coordinator Boss and watch it delegate to specialist workers).*
 
-#### Option B: Official ADK Web Dashboard
-```powershell
-adk web
-```
-*(Open `http://localhost:8000` to interact with the visual agent graph).*
-
-#### Option C: Custom Observatory Web App
+#### Option B: Observatory Web Dashboard (Recommended)
 ```powershell
 python frontend/server.py
 ```
-*(Open `http://localhost:8080` for the real-time agent visualizer and metrics panel).*
+*(Open `http://localhost:8080` to launch the full graphical dashboard featuring live multi-agent flight tracking, interactive chat, latency telemetry, and dynamic AST codebase exploration).*
+
+> [!TIP]
+> **Google ADK SDK Native Graph**: If you want to view Google ADK's raw internal session state graph, you can also run `adk web` on `http://localhost:8000`.
 
 ### 5. Step 3: Run the Test & Evaluation Benchmark
+
 ```powershell
 # Run the automated 5-question golden benchmark
 python tests/test_golden_questions.py
@@ -408,7 +483,8 @@ python -m pytest tests/
 
 ---
 
-## 📊 Golden Evaluation Showcase
+<a id="golden-evaluation"></a>
+## 10. 📊 Golden Evaluation Showcase (Benchmark Results)
 
 Recorded directly from automated execution of `tests/test_golden_questions.py` (persisted in `tests/benchmark_results.json`):
 
@@ -486,7 +562,7 @@ Naive_RAG Project Onboarding Guide:
 ```
 </details>
 
-<details>
+<details open>
 <summary><b>4. Code Explainer: "Explain vector_store.py in detail."</b></summary>
 
 * **Routed Worker**: `code_explainer`
@@ -506,7 +582,7 @@ Core functions:
 ```
 </details>
 
-<details>
+<details open>
 <summary><b>5. Negative Grounding: "Where is Stripe payment billing handled?"</b></summary>
 
 * **Routed Worker**: `code_searcher`
@@ -521,7 +597,8 @@ I could not find that in the codebase.
 
 ---
 
-## 🛡️ Engineering Challenges & Production Fixes
+<a id="engineering-fixes"></a>
+## 11. 🛡️ Engineering Challenges & Production Fixes
 
 ### 1. Windows UTF-8 Terminal Encoding (`UnicodeDecodeError`)
 * **Problem**: Running on Windows with the default `cp1252` encoding triggered `UnicodeDecodeError: 'charmap' codec can't decode byte 0x9d...` when streaming LLM responses or printing file paths containing UTF-8 characters.
@@ -548,7 +625,8 @@ I could not find that in the codebase.
 
 ---
 
-## ✅ Student Guide Compliance Checklist
+<a id="compliance-checklist"></a>
+## 12. ✅ Student Guide Compliance Checklist
 
 | Guide Requirement | Implementation Detail | Status |
 | :--- | :--- | :---: |
@@ -557,9 +635,9 @@ I could not find that in the codebase.
 | **5 or more tools, 1 with no AI** | 6 custom tools implemented; 4 tools run plain deterministic Python (`ast`, `pathlib`) | ✅ **Verified** |
 | **Your own RAG, all 5 steps** | Manual 5-stage pipeline: Read, Split, Embed, Store, Search (No LangChain/LlamaIndex) | ✅ **Verified** |
 | **Filesystem MCP on Code Explainer** | `@modelcontextprotocol/server-filesystem` via `npx` with `read_file` & `list_directory` | ✅ **Verified** |
-| **Chunking explained in README** | Detailed comparison table and technical rationale for 500-char / 100-overlap chunks | ✅ **Verified** |
+| **Chunking explained in README** | Detailed rationale for 500-char / 100-overlap chunks and comparison with other RAG patterns | ✅ **Verified** |
 | **Keys in .env, not in the code** | Isolated in `.env`, guarded by `.gitignore`, with template provided in `.env.example` | ✅ **Verified** |
-| **Runs with `adk run` or `adk web`** | Verified on ADK CLI terminal runner, ADK web interface, and custom web observatory | ✅ **Verified** |
+| **Runs with `adk run` or `adk web`** | Verified on ADK CLI terminal runner and custom Observatory dashboard (`adk web` compatible) | ✅ **Verified** |
 | **3 sample questions & problem fix** | 5 benchmarked evaluations with recorded outputs and 4 documented problem fixes | ✅ **Verified** |
 
 ---
