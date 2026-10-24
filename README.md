@@ -206,28 +206,6 @@ graph TD
 | **`onboarding_guide`** | **Specialized Worker** | `get_project_quickstart_and_modules` | *"I am new to this project. Where do I start?"*<br/>*"How do I run this repo?"* | Targeted when user asks for getting-started orientation, reading orders, or overview commands. |
 
 ---
-
-<a id="tools-catalog"></a>
-## 4. 🛠️ Comprehensive Tools Catalog
-
-Per assignment specifications:
-- ✅ **At least 5 custom tools are built** (6 custom tools total, excluding MCP server built-in tools).
-- ✅ **At least one tool uses no AI** (4 tools run plain deterministic Python standard library).
-- ✅ **Filesystem MCP server tools do not count toward the custom 5.**
-
-| Tool Function | Implementation Engine | Technology | AI vs Plain Python | Worker Owner | Purpose & Output Contract |
-| :--- | :--- | :--- | :---: | :--- | :--- |
-| **`rag_search`** | NVIDIA NIM + Pinecone | `openai`, `pinecone` | **AI** (Vectors) | `code_searcher` | Converts queries to 2048-d vectors via `nvidia/nemotron-3-embed-1b`, retrieves top-k chunks from Pinecone, checks keyword grounding, and formats output with file paths and line ranges. |
-| **`find_import_dependencies`** | Python Syntax Tree | `ast` standard lib | **Plain Python (No AI)** | `architecture_mapper` | Statically parses AST `Import` and `ImportFrom` nodes across every `.py` file to locate exact dependencies and line numbers. Zero hallucination. |
-| **`get_file_outline`** | Python Syntax Tree | `ast` standard lib | **Plain Python (No AI)** | `architecture_mapper` | Extracts class definitions, methods, functions, and their line ranges from source code. |
-| **`get_codebase_tree`** | Filesystem Traversal | `pathlib` standard lib | **Plain Python (No AI)** | `architecture_mapper` | Statically scans and lists all tracked Python files in the target codebase. |
-| **`get_project_quickstart_and_modules`** | Curated Knowledge Base | Standard Python | **Plain Python (No AI)** | `onboarding_guide` | Delivers the recommended reading sequence, purpose of each module, and CLI invocation commands. |
-| **`read_code_file`** | Sandboxed IO Reader | `pathlib`, `io` | **Plain Python (No AI)** | Standalone / Offline | Direct sandboxed full-file reader with line numbers used for offline verification before MCP integration. |
-| **`read_file`** *(MCP)* | Stdio JSON-RPC | `@modelcontextprotocol/server-filesystem` | **MCP Protocol** | `code_explainer` | Reads full, unchunked source files through the official Model Context Protocol server. |
-| **`list_directory`** *(MCP)* | Stdio JSON-RPC | `@modelcontextprotocol/server-filesystem` | **MCP Protocol** | `code_explainer` | Lists directory contents through the official Model Context Protocol server. |
-
----
-
 <a id="rag-pipeline"></a>
 ## 5. 🔍 Manual 5-Step RAG Pipeline
 
@@ -321,6 +299,28 @@ file_tools = McpToolset(
 - **Unchunked Holistic Context**: While RAG is optimal for pinpointing functions, code explanation requires reviewing full files end-to-end. MCP enables the agent to fetch complete source files on-demand.
 
 ---
+<a id="tools-catalog"></a>
+## 4. 🛠️ Comprehensive Tools Catalog
+
+Per assignment specifications:
+- ✅ **At least 5 custom tools are built** (6 custom tools total, excluding MCP server built-in tools).
+- ✅ **At least one tool uses no AI** (4 tools run plain deterministic Python standard library).
+- ✅ **Filesystem MCP server tools do not count toward the custom 5.**
+
+| Tool Function | Implementation Engine | Technology | AI vs Plain Python | Worker Owner | Purpose & Output Contract |
+| :--- | :--- | :--- | :---: | :--- | :--- |
+| **`rag_search`** | NVIDIA NIM + Pinecone | `openai`, `pinecone` | **AI** (Vectors) | `code_searcher` | Converts queries to 2048-d vectors via `nvidia/nemotron-3-embed-1b`, retrieves top-k chunks from Pinecone, checks keyword grounding, and formats output with file paths and line ranges. |
+| **`find_import_dependencies`** | Python Syntax Tree | `ast` standard lib | **Plain Python (No AI)** | `architecture_mapper` | Statically parses AST `Import` and `ImportFrom` nodes across every `.py` file to locate exact dependencies and line numbers. Zero hallucination. |
+| **`get_file_outline`** | Python Syntax Tree | `ast` standard lib | **Plain Python (No AI)** | `architecture_mapper` | Extracts class definitions, methods, functions, and their line ranges from source code. |
+| **`get_codebase_tree`** | Filesystem Traversal | `pathlib` standard lib | **Plain Python (No AI)** | `architecture_mapper` | Statically scans and lists all tracked Python files in the target codebase. |
+| **`get_project_quickstart_and_modules`** | Curated Knowledge Base | Standard Python | **Plain Python (No AI)** | `onboarding_guide` | Delivers the recommended reading sequence, purpose of each module, and CLI invocation commands. |
+| **`read_code_file`** | Sandboxed IO Reader | `pathlib`, `io` | **Plain Python (No AI)** | Standalone / Offline | Direct sandboxed full-file reader with line numbers used for offline verification before MCP integration. |
+| **`read_file`** *(MCP)* | Stdio JSON-RPC | `@modelcontextprotocol/server-filesystem` | **MCP Protocol** | `code_explainer` | Reads full, unchunked source files through the official Model Context Protocol server. |
+| **`list_directory`** *(MCP)* | Stdio JSON-RPC | `@modelcontextprotocol/server-filesystem` | **MCP Protocol** | `code_explainer` | Lists directory contents through the official Model Context Protocol server. |
+
+---
+
+
 
 <a id="repository-layout"></a>
 ## 8. 📁 Repository Layout
