@@ -253,12 +253,12 @@ async def handle_query(req: QueryRequest):
                                 final_text_chunks.append(raw)
 
     try:
-        await asyncio.wait_for(_stream_execution(), timeout=40.0)
+        await asyncio.wait_for(_stream_execution(), timeout=75.0)
     except asyncio.TimeoutError:
         trace.append({
             "stage": "TIMEOUT_GUARD",
             "timestamp": round(time.time() - t0, 3),
-            "detail": "Timeout guard (40s) cleanly halted execution.",
+            "detail": "Timeout guard (75s) cleanly halted execution.",
         })
         abort_signal.set()
     except Exception as err:
@@ -302,7 +302,23 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 def run():
     import uvicorn
-    port = int(os.getenv("PORT", "8080"))
+    import socket
+
+    preferred_port = int(os.getenv("PORT", "8000"))
+    ports_to_try = [preferred_port, 8000, 8081, 8080]
+    
+    selected_port = None
+    for p in ports_to_try:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(("127.0.0.1", p))
+            s.close()
+            selected_port = p
+            break
+        except Exception:
+            continue
+
+    port = selected_port or preferred_port
     print(f"\n[OBSERVATORY LAUNCH] Starting Multi-Agent Frontend at: http://127.0.0.1:{port}\n")
     uvicorn.run("frontend.server:app", host="127.0.0.1", port=port, reload=False)
 
