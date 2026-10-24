@@ -97,7 +97,7 @@ graph TD
     %% Tier 1: Client Interfaces
     subgraph TIER_CLIENT ["Tier 1: Presentation and Client Interfaces"]
         CLI["ADK CLI Terminal<br/>adk run code_helper"]
-        OBS["Observatory Dashboard<br/>http://127.0.0.1:8080"]
+        OBS["Observatory Dashboard<br/>http://127.0.0.1:8000"]
     end
 
     %% Tier 2: Coordinator & Gateway
